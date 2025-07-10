@@ -1,0 +1,13 @@
+# monitor-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: monitor-config
+data:
+  # Flag for the central monitor: set to "False" to disable local data collection
+  RUN_DATA_COLLECTION_CENTRAL: "False"
+  # Flag for data agents: set to "True" to enable local data collection
+  RUN_DATA_COLLECTION_AGENT: "True"
+  # URL for data agents to send data to the central monitor.
+  # "central-monitor-service" is the name of the Kubernetes Service for the central app.
+  CENTRAL_MONITOR_URL: "http://central-monitor-service:5000"

@@ -1,0 +1,57 @@
+# central-monitor.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: central-monitor-deployment
+  labels:
+    app: central-monitor
+spec:
+  replicas: 1 # Only one central monitor is needed
+  selector:
+    matchLabels:
+      app: central-monitor
+  template:
+    metadata:
+      labels:
+        app: central-monitor
+    spec:
+      containers:
+      - name: central-monitor-container
+        image: system-monitor-app:latest # Use the image you just built
+        ports:
+        - containerPort: 5000
+        env:
+        - name: RUN_DATA_COLLECTION
+          valueFrom:
+            configMapKeyRef:
+              name: monitor-config
+              key: RUN_DATA_COLLECTION_CENTRAL
+        - name: AGENT_ID
+          value: "central-monitor" # A fixed ID for the central instance
+        - name: CENTRAL_MONITOR_URL # Self-referential for consistency, not strictly used
+          valueFrom:
+            configMapKeyRef:
+              name: monitor-config
+              key: CENTRAL_MONITOR_URL
+        resources: # Define resource requests and limits for better scheduling
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: central-monitor-service # This name is used by data agents to find the central monitor
+  labels:
+    app: central-monitor
+spec:
+  selector:
+    app: central-monitor
+  ports:
+    - protocol: TCP
+      port: 5000 # The port for the service itself
+      targetPort: 5000 # The port the container listens on
+  type: NodePort # NodePort makes it accessible from your host machine via Minikube's IP

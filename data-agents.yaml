@@ -1,0 +1,52 @@
+# data-agents.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-agent-deployment
+  labels:
+    app: data-agent
+spec:
+  replicas: 3 # Start with 3 data agents. You can change this number.
+  selector:
+    matchLabels:
+      app: data-agent
+  template:
+    metadata:
+      labels:
+        app: data-agent
+    spec:
+      containers:
+      - name: data-agent-container
+        image: system-monitor-app:latest # Use the same image
+        ports:
+        - containerPort: 5000 # Agents still run Flask, though not directly accessed externally
+        env:
+        - name: RUN_DATA_COLLECTION
+          valueFrom:
+            configMapKeyRef:
+              name: monitor-config
+              key: RUN_DATA_COLLECTION_AGENT
+        - name: AGENT_ID # Use the Pod's name as a unique agent ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CENTRAL_MONITOR_URL
+          valueFrom:
+            configMapKeyRef:
+              name: monitor-config
+              key: CENTRAL_MONITOR_URL
+        resources: # Define resource requests and limits
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        # --- IMPORTANT SECURITY NOTE ---
+        # `privileged: true` is generally NOT recommended in production due to security risks.
+        # It's included here because vmstat/sar often require elevated privileges to run
+        # inside a container and access host-like metrics. For a real production system,
+        # you'd use a more secure host monitoring solution (like Prometheus Node Exporter)
+        # or research specific Linux capabilities needed instead of full privilege.
+        securityContext:
+          privileged: true
