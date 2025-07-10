@@ -91,10 +91,3 @@ Project Structure
 - Dockerfile: Docker build instructions
 - requirements.txt: Python dependencies
 
-License
-
-MIT License (add your details here)
-
----
-
-This project is a foundation for scalable, AI-driven system monitoring. Contributions and suggestions are always welcome! 
